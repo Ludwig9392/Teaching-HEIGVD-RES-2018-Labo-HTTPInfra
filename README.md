@@ -26,17 +26,23 @@ For this step we will work on the master branch, we decided to create a feature 
 The Objectives of this step is to install and manage a httpd apache server and add it to a docker container, then we have to add our HTML website.
 To do so, we went on [Docker Hub : apache image ](https://hub.docker.com/_/php/), as told in the webcast. Ten we made a Dockerfile to build this image.
 
+``` bash
+FROM php:7.0-apache
+COPY src/ /var/www/html/
+```
 
 As you can see, we create a simple apache image and we copy our [bootstrap website](https://startbootstrap.com/template-overviews/stylish-portfolio/) inside. It looks really nice and it's responsive, but it's too simple. We will add a cool feature later to make it even better.
 
 Now that we have set everything, we want to try it, to do so we run the following command on the terminal.
 
 ```bash
-docker build -t res/apache-php .
-docker run -d -p 9090:80 res/apache
+docker build -t res/apache-php ./docker-images/apache-php-image/
+docker run -d res/apache-php
 ```
+
 We can check that the container is running by launching the command `docker ps` and check that it contains our web app whit the commands `docker exec -it <container> /bin/bash` that will launch a bash on the container to let us see what's inside.  
-After that, we can use our browser to look at our website by going to http://dockerIp:9090/. It's beautiful.
+After that, we can use our browser to look at our website by going to http://dockerIp:80/.  
+It's beautiful.
 
 ### Acceptance criteria
 
@@ -48,11 +54,78 @@ After that, we can use our browser to look at our website by going to http://doc
 * You have documented your configuration in your report.
 
 
-
-
 ## Step 2: Dynamic HTTP server with express.js
 
-On this step, we decided to create a dynamic web app that will generate a list of funny peoples, it's like the one on the webcast but it's better.  
+On this step, we have to create a dynamic web app that will generate a list of funny peoples, it's like the one on the webcast but it's a lot better.  
+To do so, we decided to make a NodeJS app. But why did we choose to make a NodeJS app you ask ?  
+It's because now that we've learn how to make some nice little apps with NodeJS and because we like it a lot (and it's mainly because that's how it's done in the webcast...).
+So we added the module [chance](https://chancejs.com/). This node package is really useful when we need some random data to test our app like here and it's possible to make a lot of things with it, and Express to our repository, and made our personnal funny peoples.  
+
+```JavaScript
+var Chance = require('chance');
+var chance = new Chance();
+
+var Express = require('express');
+var app = Express();
+
+app.get('/', function(req, res) {
+    res.send(generateFunnyPeople());
+});
+
+app.listen(3000, function() {
+    console.log('Accepting HTTP requests on port 3000!');
+});
+
+function generateFunnyPeople(){
+	var numberOfPeople = chance.integer({
+		min : 1,
+		max : 10
+	});
+
+	console.log(numberOfPeople);
+
+	var peoples = [];
+
+	for(var i = 0; i < numberOfPeople; ++i){
+        var gender = chance.gender();
+		peoples.push({
+
+            'first'   : chance.first({ gender: gender }),
+            'last'    : chance.last(),
+            'gender'  : gender,
+            'country' : chance.country({ full: true }),
+            'profession' : chance.profession({rank: true}),
+            'company' : chance.company(),
+            'email' : chance.email(),
+            'pet' : chance.animal(),
+		});
+	}
+	console.log(peoples);
+	return peoples;
+}
+```
+
+This code will generate peoples with their name and profession, and other stuff and of course the most important thing, their pet !
+
+Then we create a Dockerfile for our project.  
+
+```bash
+FROM node:8
+
+COPY src /opt/app
+
+CMD ["node", "/opt/app/index.js"]
+```
+
+It's a standard one, there's nothing special about it and of course we
+build and run it and as always to test it.
+
+```bash
+docker build -t res/express-js ./docker-images/express-image/
+sudo docker run -d res/express-js
+```
+
+Then we can admire our amazing web app by going to our browser and open it.
 
 ### Acceptance criteria
 
