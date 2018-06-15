@@ -36,12 +36,12 @@ As you can see, we create a simple apache image and we copy our [bootstrap websi
 Now that we have set everything, we want to try it, to do so we run the following command on the terminal.
 
 ```bash
-docker build -t res/apache-php .
-docker run -d -p 9090:80 res/apache
+docker build -t res/apache-php ./docker-images/apache-php-image/
+docker run -d res/apache-php
 ```
 
 We can check that the container is running by launching the command `docker ps` and check that it contains our web app whit the commands `docker exec -it <container> /bin/bash` that will launch a bash on the container to let us see what's inside.  
-After that, we can use our browser to look at our website by going to http://dockerIp:9090/.  
+After that, we can use our browser to look at our website by going to http://dockerIp:80/.  
 It's beautiful.
 
 ### Acceptance criteria
@@ -118,12 +118,14 @@ CMD ["node", "/opt/app/index.js"]
 ```
 
 It's a standard one, there's nothing special about it and of course we
-build and run it as always to test it.
+build and run it and as always to test it.
 
 ```bash
-docker build -t res/express-js .
-docker run -p 9091:3000 res/express-js
+docker build -t res/express-js ./docker-images/express-image/
+sudo docker run -d res/express-js
 ```
+
+Then we can admire our amazing web app by going to our browser and open it.
 
 ### Acceptance criteria
 
