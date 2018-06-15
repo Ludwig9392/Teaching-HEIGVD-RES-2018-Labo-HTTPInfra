@@ -44,15 +44,6 @@ We can check that the container is running by launching the command `docker ps` 
 After that, we can use our browser to look at our website by going to http://dockerIp:80/.  
 It's beautiful.
 
-### Acceptance criteria
-
-* You have a GitHub repo with everything needed to build the Docker image.
-* You do a demo, where you build the image, run a container and access content from a browser.
-* You have used a nice looking web template, different from the one shown in the webcast.
-* You are able to explain what you do in the Dockerfile.
-* You are able to show where the apache config files are located (in a running container).
-* You have documented your configuration in your report.
-
 
 ## Step 2: Dynamic HTTP server with express.js
 
@@ -112,13 +103,17 @@ Then we create a Dockerfile for our project.
 ```bash
 FROM node:8
 
-COPY src /opt/app
+ADD src /opt/app
+
+WORKDIR /opt/app
+
+RUN npm install --save chance
+RUN npm install --save express
 
 CMD ["node", "/opt/app/index.js"]
 ```
 
-It's a standard one, there's nothing special about it and of course we
-build and run it and as always to test it.
+It's a standard one, there's nothing special about it, we need to install the modules that we use and of course we build and run it and as always to test it.
 
 ```bash
 docker build -t res/express-js ./docker-images/express-image/
@@ -141,7 +136,7 @@ Then we can admire our amazing web app by going to our browser and open it.
 Everything is working and we're happy now it's time to make it better by adding a proxy. This will make the access to our host easier, at the end of this step we will have a single ip address for our sites. That wil be useful for the next step, when we will use AJAX who need that the sites are on the same domain name.
 
 Now we want to make a static configuration of it. So we start by getting the ip addresses of the containers with the command `docker inspect <name> | grep -i ipaddress` and we will configure the proxy to work like this :
-- if the URL is "/api/peoples" it will redirect us the peoples on the NodeJS.
+- if the URL is "/api/peoples" it will redirect us the peoples from the NodeJS.
 - if the URL is "/" it will redirect us to the static website.
 
 To make it work we have to update the apache configuration file, so we add a 001-reverse-proxy.conf
@@ -156,7 +151,9 @@ To make it work we have to update the apache configuration file, so we add a 001
   ProxyPassReverse "/" "http://172.17.0.2:80/"
 </VirtualHost>
 ```
+
 And we update our Dockerfile.  
+
 ```bash
 FROM php:7.0-apache
 
@@ -165,44 +162,24 @@ COPY conf/ /etc/apache2
 RUN a2enmod proxy proxy_http
 RUN a2ensite 000-* 001-*
 ```
-After this 
 
+After this YOU have to set your hosts file to know how to redirect demo.res.ch to the docker.
+The file is :
+- windows : C:\WINDOWS\system32\drivers\etc\hosts
+- Mac OS : /private/etc/hosts
+- Unix like : /etc/hosts
 
 Now it works and we are happy, but why does it work ?
-Well, it's quite easy, ProxyPass will make sur that the requests go to the host and ProxyPassReverse will make sure that we get it's responses.
-
-### Acceptance criteria
-
-* You have a GitHub repo with everything needed to build the Docker image for the container.
-* You do a demo, where you start from an "empty" Docker environment (no container running) and where you start 3 containers: static server, dynamic server and reverse proxy; in the demo, you prove that the routing is done correctly by the reverse proxy.
-* You can explain and prove that the static and dynamic servers cannot be reached directly (reverse proxy is a single entry point in the infra).
-* You are able to explain why the static configuration is fragile and needs to be improved.
-* You have documented your configuration in your report.
-
+Well, it's quite easy, ProxyPass will make sure that the requests go to the host and ProxyPassReverse will make sure that we get its responses.
+Now you can go on your browser and go from one host to the other by tiping :
+- http://demo.res.ch : for the static website
+- http://demo.res.ch/api/peoples : to get the peoples from the NodeJS.
 
 
 ## Step 4: AJAX requests with JQuery
 
 
-### Acceptance criteria
-
-* You have a GitHub repo with everything needed to build the various images.
-* You do a complete, end-to-end demonstration: the web page is dynamically updated every few seconds (with the data coming from the dynamic backend).
-* You are able to prove that AJAX requests are sent by the browser and you can show the content of th responses.
-* You are able to explain why your demo would not work without a reverse proxy (because of a security restriction).
-* You have documented your configuration in your report.
-
 ## Step 5: Dynamic reverse proxy configuration
-
-
-### Acceptance criteria
-
-* You have a GitHub repo with everything needed to build the various images.
-* You have found a way to replace the static configuration of the reverse proxy (hard-coded IP adresses) with a dynamic configuration.
-* You may use the approach presented in the webcast (environment variables and PHP script executed when the reverse proxy container is started), or you may use another approach. The requirement is that you should not have to rebuild the reverse proxy Docker image when the IP addresses of the servers change.
-* You are able to do an end-to-end demo with a well-prepared scenario. Make sure that you can demonstrate that everything works fine when the IP addresses change!
-* You are able to explain how you have implemented the solution and walk us through the configuration and the code.
-* You have documented your configuration in your report.  
 
 
 ## Additional steps to get extra points on top of the "base" grade
@@ -210,9 +187,4 @@ Well, it's quite easy, ProxyPass will make sur that the requests go to the host 
 
 ### Management UI (0.5 pt)
 
-
-### Acceptance criteria  
-
-* You develop a web app (e.g. with express.js) that administrators can use to monitor and update your web infrastructure.
-* You find a way to control your Docker environment (list containers, start/stop containers, etc.) from the web app. For instance, you use the Dockerode npm module (or another Docker client library, in any of the supported languages).
-* You have documented your configuration and your validation procedure in your report.
+We really love extra points like this one. We had no idea how to do it and typed it on Google, and found out about Portainer, we looked what it does and it was perfect for
