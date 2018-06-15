@@ -138,7 +138,38 @@ Then we can admire our amazing web app by going to our browser and open it.
 
 
 ## Step 3: Reverse proxy with apache (static configuration)
+Everything is working and we're happy now it's time to make it better by adding a proxy. This will make the access to our host easier, at the end of this step we will have a single ip address for our sites. That wil be useful for the next step, when we will use AJAX who need that the sites are on the same domain name.
 
+Now we want to make a static configuration of it. So we start by getting the ip addresses of the containers with the command `docker inspect <name> | grep -i ipaddress` and we will configure the proxy to work like this :
+- if the URL is "/api/peoples" it will redirect us the peoples on the NodeJS.
+- if the URL is "/" it will redirect us to the static website.
+
+To make it work we have to update the apache configuration file, so we add a 001-reverse-proxy.conf
+```XML
+<VirtualHost *:80>
+	ServerName demo.res.ch
+
+	ProxyPass "/api/peoples/" "http://172.17.0.3:3000/"
+	ProxyPassReverse "/api/peoples/" "http://172.17.0.3:3000/"
+
+	ProxyPass "/" "http://172.17.0.2:80/"
+  ProxyPassReverse "/" "http://172.17.0.2:80/"
+</VirtualHost>
+```
+And we update our Dockerfile.  
+```bash
+FROM php:7.0-apache
+
+COPY conf/ /etc/apache2
+
+RUN a2enmod proxy proxy_http
+RUN a2ensite 000-* 001-*
+```
+After this 
+
+
+Now it works and we are happy, but why does it work ?
+Well, it's quite easy, ProxyPass will make sur that the requests go to the host and ProxyPassReverse will make sure that we get it's responses.
 
 ### Acceptance criteria
 
