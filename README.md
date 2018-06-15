@@ -122,16 +122,6 @@ sudo docker run -d res/express-js
 
 Then we can admire our amazing web app by going to our browser and open it.
 
-### Acceptance criteria
-
-* You have a GitHub repo with everything needed to build the Docker image.
-* You do a demo, where you build the image, run a container and access content from a browser.
-* You generate dynamic, random content and return a JSON payload to the client.
-* You cannot return the same content as the webcast (you cannot return a list of people).
-* You don't have to use express.js; if you want, you can use another JavaScript web framework or event another language.
-* You have documented your configuration in your report.
-
-
 ## Step 3: Reverse proxy with apache (static configuration)
 Everything is working and we're happy now it's time to make it better by adding a proxy. This will make the access to our host easier, at the end of this step we will have a single ip address for our sites. That wil be useful for the next step, when we will use AJAX who need that the sites are on the same domain name.
 
@@ -220,11 +210,49 @@ And now we are really happy because our application do what we want it to do !
 It's a little dirty because we've had to write the ip address and if they change nothing will work at all. So that's why we will change everything on the last step !
 
 ## Step 5: Dynamic reverse proxy configuration
+The final step, soon everything will be over.
+We learn on the webcast that we can use event variable inside the container with the -e option.
+So we update the [foreground file](https://github.com/docker-library/php/blob/master/7.0/stretch/apache/apache2-foreground)
 
+```bash
+# Add setup for RES lab
+
+echo "Static app URL: $STATIC_APP"
+echo "Dynamic app URL: $DYNAMIC_APP"
+
+php /var/apache2/templates/config-template.php > /etc/apache2/sites-available/001-reverse-proxy.conf
+```
+
+Then we create a new configuration file to use a dynamic proxy that will get the ip and port for it.
+
+```
+<?php
+    $static_app = getenv('STATIC_APP');
+    $dynamic_app = getenv('DYNAMIC_APP');
+?>  
+
+<VirtualHost *:80>
+	ServerName demo.res.ch
+
+	ProxyPass '/api/peoples/' 'http://<?php print "$dynamic_app" ?>/'
+	ProxyPassReverse '/api/peoples/' 'http://<?php print "$dynamic_app" ?>/'
+
+	ProxyPass '/' 'http://<?php print "$static_app" ?>/'
+    ProxyPassReverse '/' 'http://<?php print "$static_app" ?>/'
+</VirtualHost>
+```  
+
+And finaly we update our Dockerfile to copy these files.
+```bash
+COPY apache2-foreground /usr/local/bin/
+COPY templates /var/apache2/templates
+```
+
+Here we have some new function that we haven't used before.
+- getenv() Gets the value of an environment variable
+- <?php print "$static_app" ?> will print the content of the php variable
 
 ## Additional steps to get extra points on top of the "base" grade
-
-
 ### Management UI (0.5 pt)
 
 We really love extra points like this one. We had no idea how to do it and typed it on Google, then we found out about Portainer, we looked what it does and it was perfect for our needs, the best part of it is that it's really easy to use.
@@ -234,3 +262,11 @@ docker volume create portainer_data
 docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
 ```
 Then we can manage our docker on a browser on http://dockerIp:9000.
+
+## The end is just the beginning
+
+Now everything should work and we want to try it but there's just a little problem, we don't like to type so many commands, it's boring, take a lot of times, and it's easy to make a mistake. It's the same for you isn't it ?  
+So we made a script that will do that for us !  
+To test the lab, you just need to **clone this repo** and then you have to go on it's **root** and launch our **setup.sh**.
+
+**Now we have done a good job and deserve to get a decent grade, what do you think ?**
