@@ -177,7 +177,47 @@ Now you can go on your browser and go from one host to the other by tiping :
 
 
 ## Step 4: AJAX requests with JQuery
+We were asked to add a text editor on this step so we changed all our Dockerfile to add the following line : `RUN apt-get update && apt-get install -y nano`.
+Then we updated the JavaScript file on the apache host to add a function to read our JSON.
+```JavaScript
+$(function() {
+    console.log("Loading peoples");
 
+    function loadPeoples() {
+            $.getJSON( "/api/peoples/", function( peoples ) {
+                    console.log(peoples);
+                    var name = "No one's here";
+                    var gender = "No one's here";
+                    var nationality = "No one's here";
+                    var job = "No one's here";
+                    var pet = "No one's here";
+                    if( peoples.length > 0 ) {
+                            name = peoples[0].first + " " + peoples[0].last;
+                            gender = peoples[0].gender;
+                            nationality = peoples[0].country;
+                            job = peoples[0].profession + " - " + peoples[0].company;
+                            pet = peoples[0].pet;
+                    }
+                    $(".name").text(name);
+                    $(".gender").text(gender);
+                    $(".nation").text(nationality);
+                    $(".job").text(job);
+                    $(".pet").text(pet);
+            });
+    };
+
+    loadPeoples();
+    setInterval( loadPeoples, 7000 );
+});
+```
+And on the template :
+```JavaScript
+<script src="js/funny-peoples.js"></script>
+```
+This will get the first name on the JSON list and show it as a message for 7 seconds to let you read it.
+
+And now we are really happy because our application do what we want it to do !
+It's a little dirty because we've had to write the ip address and if they change nothing will work at all. So that's why we will change everything on the last step !
 
 ## Step 5: Dynamic reverse proxy configuration
 
@@ -187,4 +227,10 @@ Now you can go on your browser and go from one host to the other by tiping :
 
 ### Management UI (0.5 pt)
 
-We really love extra points like this one. We had no idea how to do it and typed it on Google, and found out about Portainer, we looked what it does and it was perfect for
+We really love extra points like this one. We had no idea how to do it and typed it on Google, then we found out about Portainer, we looked what it does and it was perfect for our needs, the best part of it is that it's really easy to use.
+To have it, you juste run the following commands :
+```bash
+docker volume create portainer_data
+docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+```
+Then we can manage our docker on a browser on http://dockerIp:9000.
