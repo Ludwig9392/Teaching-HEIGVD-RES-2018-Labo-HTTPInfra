@@ -240,7 +240,7 @@ Then we create a new configuration file to use a dynamic proxy that will get the
 	ProxyPass '/' 'http://<?php print "$static_app" ?>/'
     ProxyPassReverse '/' 'http://<?php print "$static_app" ?>/'
 </VirtualHost>
-```  
+```
 
 And finaly we update our Dockerfile to copy these files.
 ```bash
@@ -267,6 +267,6 @@ Then we can manage our docker on a browser on http://dockerIp:9000.
 
 Now everything should work and we want to try it but there's just a little problem, we don't like to type so many commands, it's boring, take a lot of times, and it's easy to make a mistake. It's the same for you isn't it ?  
 So we made a script that will do that for us !  
-To test the lab, you just need to **clone this repo** and then you have to go on it's **root** and launch our **setup.sh**.
+To test the lab, you just need to **clone this repo**, update your **hosts file** and then you have to go on it's **root** and launch our **setup.sh**.
 
 **Now we have done a good job and deserve to get a decent grade, what do you think ?**
